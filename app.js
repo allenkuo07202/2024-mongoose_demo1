@@ -27,24 +27,50 @@ const studentSchema = new Schema({
 });
 
 const Student = mongoose.model("Student", studentSchema);
-const newObject = new Student({
-  name: "Esther",
-  age: 27,
-  major: "Mathematics",
-  scholarship: {
-    merit: 6000,
-    other: 7000,
-  },
-});
-newObject
-  .save()
-  .then((saveObject) => {
-    console.log("資料已經儲存完畢，儲存的資料是：");
-    console.log(saveObject);
-  })
-  .catch((e) => {
+// 法1
+// Student.find({})
+//   .exec()
+//   .then((data) => {
+//     console.log(data);
+//   })
+//   .catch((e) => {
+//     console.log(e);
+//   });
+// .find()這個method，return的是query
+// 再接.exec()，return的是promise
+// 所以後面就可以再接.then()
+
+// 在find裡面放一個empty object，意思是要去找students這個collection的所有資料
+// 當promise變成fulfilled的時候，就會自動執行then()裡面的callback function
+
+//法2 用async function
+// async function findStudent() {
+//   try {
+//     let data = await Student.find().exec();
+//     console.log(data);
+//   } catch (e) {
+//     console.log(e);
+//   }
+// }
+
+app.get("/", async (req, res) => {
+  try {
+    let data = await Student.find().exec();
+    res.send(data);
+  } catch (e) {
     console.log(e);
-  });
+  }
+});
+
+app.get("/findOne", async (req, res) => {
+  try {
+    let data = await Student.findOne({ name: "Grace" }).exec();
+    console.log(data);
+    res.send(data);
+  } catch (e) {
+    console.log(e);
+  }
+});
 
 app.listen(3000, () => {
   console.log("伺服器正在聆聽port 3000...");
