@@ -18,7 +18,7 @@ mongoose
 
 const studentSchema = new Schema({
   name: String,
-  age: Number,
+  age: { type: Number, min: [0, "年齡不能小於0"] },
   major: String,
   scholarship: {
     merit: Number,
@@ -27,50 +27,82 @@ const studentSchema = new Schema({
 });
 
 const Student = mongoose.model("Student", studentSchema);
-// 法1
-// Student.find({})
+
+// 新增資料(會去看Schema的設定條件)
+// let newStudent = new Student({
+//   name: "Wilson",
+//   age: 27,
+//   major: "Computer Science",
+//   scholarship: {
+//     merit: 5000,
+//     other: 2000,
+//   },
+// });
+
+// newStudent
+//   .save()
+//   .then((data) => {
+//     console.log("成功儲存新學生資訊");
+//   })
+//   .catch((e) => {
+//     console.log(e);
+//   });
+
+// 更新資料
+// Student.updateOne({ name: "Esther" }, { name: "Esther Lam" })
 //   .exec()
+//   .then((msg) => {
+//     console.log(msg);
+//   })
+//   .catch((e) => {
+//     console.log(e);
+//   });
+
+// Student.updateOne(
+//   { name: "Esther Lam" },
+//   { age: 27 },
+//   { runValidators: true, new: true }
+//   // 要設定3rd參數，它才會去看Schema的設定條件
+//   // new: true對updateOne無效
+// )
+//   .exec()
+//   .then((msg) => {
+//     console.log(msg);
+//   })
+//   .catch((e) => {
+//     console.log(e);
+//   });
+
+// Student.findOneAndUpdate(
+//   { name: "Grace Xie" },
+//   { name: "Grace" },
+//   { runValidators: true, new: true }
+//   // 設定new屬性為true，則會直接看到更新完成的document(不用查詢就看得到)
+// )
+//   .exec()
+//   .then((newData) => {
+//     console.log(newData);
+//   })
+//   .catch((e) => {
+//     console.log(e);
+//   });
+
+Student.find({ "scholarship.merit": { $gte: 5000 } })
+  .then((data) => {
+    console.log(data);
+  })
+  .catch((e) => {
+    console.log(e);
+  });
+
+// 查詢資料
+// Student.find({})
 //   .then((data) => {
 //     console.log(data);
 //   })
 //   .catch((e) => {
 //     console.log(e);
 //   });
-// .find()這個method，return的是query
-// 再接.exec()，return的是promise
-// 所以後面就可以再接.then()
-
-// 在find裡面放一個empty object，意思是要去找students這個collection的所有資料
-// 當promise變成fulfilled的時候，就會自動執行then()裡面的callback function
-
-//法2 用async function
-// async function findStudent() {
-//   try {
-//     let data = await Student.find().exec();
-//     console.log(data);
-//   } catch (e) {
-//     console.log(e);
-//   }
-// }
-
-app.get("/", async (req, res) => {
-  try {
-    let data = await Student.find().exec();
-    res.send(data);
-  } catch (e) {
-    console.log(e);
-  }
-});
-
-app.get("/findOne", async (req, res) => {
-  try {
-    let data = await Student.findOne({ name: "Grace" }).exec();
-    console.log(data);
-    res.send(data);
-  } catch (e) {
-    console.log(e);
-  }
-});
 
 app.listen(3000, () => {
   console.log("伺服器正在聆聽port 3000...");
