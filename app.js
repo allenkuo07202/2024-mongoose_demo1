@@ -45,14 +45,13 @@ const studentSchema = new Schema(
     },
   },
   {
-    methods: {
-      printTotalScholarship() {
-        return this.scholarship.merit + this.scholarship.other;
+    statics: {
+      findAllMajorStudents(major) {
+        return this.find({ major: major }).exec();
       },
     },
   }
 );
-// 之前的schema setting為1st參數，methods物件為2nd參數
 
 // 法2
 const studentSchema = new Schema({
@@ -82,20 +81,50 @@ const studentSchema = new Schema({
   },
 });
 
-studentSchema.methods.printTotalScholarship = function () {
-  return this.scholarship.merit + this.scholarship.other;
+studentSchema.statics.findAllMajorStudents = function (major) {
+  return this.find({ major: major }).exec();
 };
+
+// 法3
+const studentSchema = new Schema({
+  name: { type: String, required: true, maxlength: 25 },
+  age: { type: Number, min: [0, "年齡不能小於0"] },
+  // major: { type: String, required: [true, "每位學生都需要選至少一個主修"] },
+  major: {
+    type: String,
+    required: function () {
+      return this.scholarship.merit >= 3000;
+    },
+    // 若 merit >= 3000，則 major就是必填；若 merit < 3000，則不是必填
+    enum: [
+      "Chemistry",
+      "Computer Science",
+      "Mathematics",
+      "Civil Engineering",
+      "undecided",
+    ],
+    // 若所填的值，都不符合enum裡面的內容，就會出現問題
+    // 這功能適合用在會員分級
+  },
+
+  scholarship: {
+    merit: { type: Number, default: 0 },
+    other: { type: Number, default: 0 },
+  },
+});
+
+studentSchema.static("findAllMajorStudents", function (major) {
+  return this.find({ major: major }).exec();
+});
 
 const Student = mongoose.model("Student", studentSchema);
 
-Student.find({})
-  .exec()
-  .then((arr) => {
-    arr.forEach((student) => {
-      console.log(
-        student.name + "的總獎學金金額是" + student.printTotalScholarship()
-      );
-    });
+Student.findAllMajorStudents("CS")
+  .then((data) => {
+    console.log(data);
+  })
+  .catch((e) => {
+    console.log(e);
   });
 
 app.listen(3000, () => {
